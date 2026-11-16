@@ -1,5 +1,5 @@
-# crisp suite launch gate
-Centralized master dashboard and navigation hub for the 7-app Crisp Suite ecosystem of high-end gated web experiences.
+# crisp suite master gate
+Centralized master dashboard and navigation hub for the 6-app Crisp Suite ecosystem of high-end gated web experiences.
 
 The official deployment verification and go-live gateway for the Crisp Suite ecosystem. 
 
