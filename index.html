@@ -3,52 +3,527 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crisp Suite - Master Gate</title>
-    <!-- Tailwind CSS para sa mabilis at malinis na styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Crisp Gate Master — Administrative Clearance</title>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#07050a">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #07050a;
+            --card-bg: rgba(20, 16, 28, 0.85);
+            --gold: #fbbf24;
+            --gold-light: #fde68a;
+            --rose: #d97706;
+            --rose-glow: rgba(251, 191, 36, 0.3);
+            --emerald: #10b981;
+            --border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --input-bg: rgba(7, 5, 10, 0.7);
+        }
+
+        [data-theme="light"] {
+            --bg-main: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --gold: #b45309;
+            --gold-light: #78350f;
+            --rose: #d97706;
+            --rose-glow: rgba(217, 119, 6, 0.2);
+            --emerald: #059669;
+            --border: rgba(0, 0, 0, 0.12);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --input-bg: rgba(241, 245, 249, 0.9);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            background: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .hidden { display: none !important; }
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        /* --- STEP 1: 3D ENVELOPE --- */
+        .envelope-wrapper {
+            perspective: 1000px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .envelope {
+            position: relative;
+            width: 340px;
+            height: 230px;
+            background: linear-gradient(135deg, #18181b, #09090b);
+            border: 1px solid rgba(251, 191, 36, 0.35);
+            border-radius: 12px;
+            margin: 0 auto 25px auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 30px rgba(251, 191, 36, 0.2);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;
+        }
+
+        .envelope-wrapper:hover .envelope {
+            transform: translateY(-8px) scale(1.02);
+        }
+
+        .flap {
+            position: absolute;
+            top: 0; left: 0; width: 0; height: 0;
+            border-left: 170px solid transparent;
+            border-right: 170px solid transparent;
+            border-top: 130px solid #27272a;
+            transform-origin: top;
+            transition: transform 0.6s ease;
+            z-index: 3;
+        }
+
+        .envelope.open .flap { transform: rotateX(180deg); z-index: 1; }
+
+        .pocket {
+            position: absolute; bottom: 0; left: 0; width: 0; height: 0;
+            border-left: 170px solid #18181b;
+            border-right: 170px solid #18181b;
+            border-bottom: 115px solid #09090b;
+            border-top: 115px solid transparent;
+            z-index: 2;
+        }
+
+        .wax-seal {
+            position: absolute; top: 95px; left: 50%;
+            transform: translateX(-50%);
+            width: 64px; height: 64px;
+            background: radial-gradient(circle at 30% 30%, #fde68a, #d97706);
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            z-index: 4;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 26px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .envelope.open .wax-seal { opacity: 0; transform: translateX(-50%) scale(0.5); }
+
+        .env-prompt {
+            font-family: 'Cinzel', serif;
+            font-size: 1.4rem;
+            color: var(--gold);
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .env-sub { font-size: 0.85rem; color: var(--text-muted); }
+
+        /* --- STEP 2: STEP-BY-STEP SCREENING CARD --- */
+        .gate-card {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+            animation: slideUp 0.5s ease forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(25px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .mode-tabs {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            background: var(--input-bg);
+            padding: 6px;
+            border-radius: 12px;
+            margin-bottom: 22px;
+            border: 1px solid var(--border);
+        }
+
+        .mode-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 9px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, var(--gold), #d97706);
+            color: #07050a;
+            box-shadow: 0 4px 12px var(--rose-glow);
+        }
+
+        .step-indicator {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--gold);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .question-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.35rem;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        .question-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 22px;
+        }
+
+        .form-group { margin-bottom: 18px; }
+
+        input, select {
+            width: 100%;
+            padding: 13px 16px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        input:focus, select:focus { border-color: var(--gold); }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-next, .btn-back {
+            flex: 1;
+            padding: 13px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .btn-next {
+            background: linear-gradient(135deg, var(--gold), #d97706);
+            color: #07050a;
+            box-shadow: 0 8px 20px var(--rose-glow);
+        }
+
+        .btn-back {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        .error-text {
+            color: #f43f5e;
+            font-size: 0.82rem;
+            margin-top: 10px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* --- STEP 3: SUCCESS PASS (LETTER FORMAT) --- */
+        .vip-pass {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card-bg);
+            border: 2px solid var(--gold);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 25px 60px rgba(251, 191, 36, 0.2);
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .letterhead {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 14px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .letter-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            color: var(--gold);
+        }
+
+        .letter-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
+        .letter-body {
+            font-size: 0.88rem;
+            color: var(--text-main);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .ticket-box {
+            background: var(--input-bg);
+            border: 1px dashed var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            margin: 16px 0;
+            font-size: 0.85rem;
+        }
+
+        .ticket-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .ticket-row:last-child { border-bottom: none; }
+        .t-label { color: var(--text-muted); }
+        .t-val { font-weight: 700; color: var(--text-main); text-align: right; }
+
+        .btn-action {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, var(--gold), #d97706);
+            color: #07050a;
+            border: none;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 0.95rem;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(251, 191, 36, 0.3);
+        }
+    </style>
 </head>
-<body class="bg-slate-900 text-white flex items-center justify-center min-h-screen">
+<body data-theme="dark">
 
-    <div class="max-w-md w-full bg-slate-800 p-8 rounded-xl shadow-lg border border-slate-700">
-        <h1 class="text-2xl font-bold mb-6 text-center text-cyan-400">Crisp Suite: Master Gate</h1>
+    <button class="theme-toggle" onclick="toggleTheme()">☀️ / 🌙 Theme</button>
 
-        <!-- Step Gate: Input / Action View -->
-        <div id="stepGate" class="space-y-4">
-            <p class="text-slate-300 text-sm">Authenticate core administrative node clearance and level permissions.</p>
-            <button onclick="showSuccess()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-semibold py-2 px-4 rounded transition">
-                Authenticate Master Node
-            </button>
+    <!-- STEP 1: 3D ENVELOPE -->
+    <div class="envelope-wrapper" id="stepEnvelope" onclick="openEnvelope()">
+        <div class="envelope" id="envelopeObj">
+            <div class="flap"></div>
+            <div class="pocket"></div>
+            <div class="wax-seal">📜</div>
+        </div>
+        <div class="env-prompt">MASTER GATE</div>
+        <div class="env-sub">Tap wax seal to authenticate administrative clearance letter</div>
+    </div>
+
+    <!-- STEP 2: STEP-BY-STEP SCREENING CARD -->
+    <div class="gate-card hidden" id="stepGate">
+        <div class="mode-tabs">
+            <button class="mode-btn active" id="tabAdmin" onclick="switchMode('admin')">🏛️ Admin Tier</button>
+            <button class="mode-btn" id="tabRoot" onclick="switchMode('root')">⚡ Root Access</button>
         </div>
 
-        <!-- Step Pass: Success / Result View -->
-        <div id="stepPass" class="hidden space-y-4">
-            <div class="p-4 bg-slate-900 rounded border border-emerald-500/50">
-                <p class="text-xs text-emerald-400 font-mono uppercase tracking-wider">Status: Administrative Access Granted</p>
-                <p class="text-lg font-bold text-white mt-1" id="resNode"></p>
-                <p class="text-sm text-slate-300 mt-1">Tier: <span id="resTier" class="font-mono text-cyan-300"></span></p>
-                <p class="text-xs font-mono text-slate-400 mt-3">Auth Code: <span id="resCode" class="text-yellow-400 font-bold"></span></p>
-            </div>
-            <button onclick="location.reload()" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium py-2 px-4 rounded transition">
-                Reset Authentication
-            </button>
+        <div class="step-indicator" id="stepIndicator">Step 1 of 4 • ADMIN TIER</div>
+        <div class="question-title" id="qTitle">Administrator Name?</div>
+        <div class="question-desc" id="qDesc">Ilagay ang pangalan ng awtorisadong master admin.</div>
+
+        <div class="form-group" id="inputContainer">
+            <!-- Dynamically injected input per question -->
+        </div>
+
+        <div class="error-text" id="errorMsg"></div>
+
+        <div class="btn-group">
+            <button class="btn-back hidden" id="btnBack" onclick="prevStep()">Bumalik</button>
+            <button class="btn-next" id="btnNext" onclick="nextStep()">Susunod ➔</button>
         </div>
     </div>
 
-    <!-- Dito nagtatapos ang UI / HTML elements mo -->
-        
+    <!-- STEP 3: SUCCESS PASS (LETTER FORMAT) -->
+    <div class="vip-pass hidden" id="stepPass">
+        <div class="letterhead">
+            <div>
+                <div class="letter-title">CRISP SUITE ECOSYSTEM</div>
+                <div class="letter-sub">OFFICE OF THE MASTER ADMINISTRATOR</div>
+            </div>
+            <div class="letter-sub" id="resDate"></div>
+        </div>
+
+        <div class="letter-body">
+            <p>To Whom It May Concern,</p>
+            <p style="margin-top: 8px;">This official document certifies the administrative clearance for node identifier <strong id="resNode" style="color: var(--gold);"></strong> under tier <strong id="resTier" style="color: var(--gold);"></strong>.</p>
+        </div>
+
+        <div class="ticket-box">
+            <div class="ticket-row"><span class="t-label">Master Admin:</span><span class="t-val" id="resName"></span></div>
+            <div class="ticket-row"><span class="t-label">Clearance Level:</span><span class="t-val" style="color: var(--emerald);" id="resStatus"></span></div>
+            <div class="ticket-row"><span class="t-label">Auth Letter Code:</span><span class="t-val" style="color: var(--gold);" id="resCode"></span></div>
+        </div>
+
+        <button class="btn-action" onclick="alert('✅ Master Clearance Letter verified & saved successfully!')">✨ Copy / Save Clearance Letter</button>
+    </div>
+
+    <script>
+        let currentTheme = 'dark';
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', currentTheme);
+        }
+
+        let mode = 'admin';
+        let step = 1;
+        let masterDataUser = { name: '', nodeId: '', tier: '' };
+
+        function openEnvelope() {
+            document.getElementById('envelopeObj').classList.add('open');
+            setTimeout(() => {
+                document.getElementById('stepEnvelope').classList.add('hidden');
+                document.getElementById('stepGate').classList.remove('hidden');
+                renderQuestion();
+            }, 600);
+        }
+
+        function switchMode(selectedMode) {
+            mode = selectedMode;
+            step = 1;
+            document.getElementById('tabAdmin').classList.toggle('active', mode === 'admin');
+            document.getElementById('tabRoot').classList.toggle('active', mode === 'root');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            document.getElementById('errorMsg').innerText = '';
+            document.getElementById('btnBack').classList.toggle('hidden', step === 1);
+            
+            const totalSteps = 4;
+            document.getElementById('stepIndicator').innerText = `Step ${step} of ${totalSteps} • ${mode.toUpperCase()}`;
+
+            let title = '', desc = '', html = '';
+
+            if (step === 1) {
+                title = "Administrator Name?";
+                desc = "Ilagay ang pangalan ng opisyal na mag-aapruba.";
+                html = `<input type="text" id="ansVal" placeholder="Master Administrator" value="${masterDataUser.name}">`;
+            } else if (step === 2) {
+                title = "Node Identifier?";
+                desc = "Halimbawa: CRISP-MASTER-01 o custom ID.";
+                html = `<input type="text" id="ansVal" placeholder="CRISP-MASTER-01" value="${masterDataUser.nodeId}">`;
+            } else if (step === 3) {
+                title = "Security Clearance Tier?";
+                desc = "Piliin ang awtorisadong antas ng clearance.";
+                html = `<select id="ansVal">
+                    <option value="">Pili ng tier...</option>
+                    <option value="Level 5 Administrator">Level 5 Administrator (Full Access)</option>
+                    <option value="Level 7 Root Master">Level 7 Root Master (Ecosystem Override)</option>
+                </select>`;
+            } else if (step === 4) {
+                title = "Master Passcode Key?";
+                desc = "Ilagay ang key para i-generate ang clearance letter.";
+                html = `<input type="password" id="ansVal" placeholder="••••" value="">`;
+            }
+
+            if (step < 4) {
+                document.getElementById('btnNext').innerText = "Susunod ➔";
+            } else {
+                document.getElementById('btnNext').innerText = "Generate Letter 📜";
+            }
+
+            document.getElementById('qTitle').innerText = title;
+            document.getElementById('qDesc').innerText = desc;
+            document.getElementById('inputContainer').innerHTML = html;
+        }
+
+        function nextStep() {
+            const valElem = document.getElementById('ansVal');
+            const err = document.getElementById('errorMsg');
+            const val = valElem ? valElem.value.trim() : '';
+
+            if (!val) {
+                err.innerText = "⚠️ Paki-fill up ang kinakailangang field bago tumuloy.";
+                return;
+            }
+
+            if (step === 1) masterDataUser.name = val;
+            if (step === 2) masterDataUser.nodeId = val;
+            if (step === 3) masterDataUser.tier = val;
+            if (step === 4) {
+                showSuccess();
+                return;
+            }
+
+            step++;
+            renderQuestion();
+        }
+
+        function prevStep() {
+            if (step > 1) { step--; renderQuestion(); }
+        }
+    </script>
+            
     <!-- 1. Dito mo nilagay ang function mo directly sa index.html -->
     <script>
         function showSuccess() {
             document.getElementById('stepGate').classList.add('hidden');
-            document.getElementById('resNode').innerText = masterData.nodeId;
-            document.getElementById('resTier').innerText = masterData.tier;
+            
+            document.getElementById('resName').innerText = masterDataUser.name;
+            document.getElementById('resNode').innerText = masterDataUser.nodeId;
+            document.getElementById('resTier').innerText = masterDataUser.tier;
+            document.getElementById('resStatus').innerText = "Granted & Active";
+            document.getElementById('resDate').innerText = new Date().toLocaleDateString();
             document.getElementById('resCode').innerText = 'CRISP-MSTR-' + Math.random().toString(36).substring(2, 7).toUpperCase();
             
             document.getElementById('stepPass').classList.remove('hidden');
         }
     </script>
-        
+
     <!-- 2. Script para ikonekta ang logic mula sa repo.js -->
     <script src="repo.js"></script>
 </body>
-</html>
+    </html>
+    
